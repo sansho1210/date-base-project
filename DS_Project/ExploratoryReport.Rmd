@@ -1,0 +1,99 @@
+---
+title: "ExploratoryReport"
+team name: "Cookeville Steamers"
+group members: "Avery Kerley, Austin Lane, Sawyer Burns, Sho Sakane, Alexander Smith"
+date: "2022-11-18"
+output: pdf_document
+
+---
+
+### Intro
+This is an exploratory analysis over a dataset acquired from the gaming platform *Steam*
+
+### Importing relevant libraries
+```{r}
+library(plyr)
+```
+
+### Importing Dataset
+```{r}
+steamLib <- read.csv(file="./steam.csv", row.names=1)
+steamLib2<- read.csv(file="./steam.csv", row.names=1)
+steamLib3<- read.csv(file="./steam.csv", row.names=1)
+steamLib4<- read.csv(file="./steam.csv", row.names=1)
+steamLib5<- read.csv(file="./steam.csv", row.names=1)
+```
+A link to this data can be found here: https://www.kaggle.com/datasets/nikdavis/steam-store-games
+
+### Exploratory Analysis
+In order to understand the data, we  first have to look at an overview of what we have. To do so, we will start with a summary of the data
+```{r}
+steamDF <- data.frame(steamLib)
+steamDF$categ <- sapply(strsplit(steamDF$steamspy_tags, ';'), head, 1)
+genres <- steamDF$genres
+```
+
+```{r}
+goodGenres <- unique(steamDF$genres[count(steamDF, "genres")[2] > 0])
+relevantGames <- steamDF[steamDF$genre %in% goodGenres,]
+relevantGames
+```
+
+```{r}
+ratingDif <- aggregate((relevantGames$positive_ratings / (relevantGames$positive_ratings + relevantGames$negative_ratings)), list(relevantGames$genres), mean)
+```
+
+```{r}
+length(unique(goodGenres))
+length(ratingDif$x)
+```
+```{r}
+par(mar=c(10,5,2,2))
+barplot(ratingDif$x, names=ratingDif$Group.1, las=2)
+```
+
+#### Examining Price Quartiles
+```{r}
+steamLib <- steamLib$price
+steamLib <- steamLib[steamLib != 0]
+steamLib <- steamLib[steamLib >= quantile(steamLib, 0.1, names=FALSE)]
+steamLib <- steamLib[steamLib <= quantile(steamLib, 0.9, names=FALSE)]
+
+hist(steamLib, main = 'Price quartiles 10% to 90%')
+```
+First, we will be looking at the price quartiles for games.
+#### Achievements
+```{r}
+steamLib2 <- steamLib2$achievements
+steamLib2 <- steamLib2[steamLib2 != 0]
+steamLib2 <- steamLib2[steamLib2 >= quantile(steamLib, 0.1, names=FALSE)]
+steamLib2 <- steamLib2[steamLib2 <= quantile(steamLib, 0.9, names=FALSE)]
+
+hist(steamLib2, main = 'Achievements quartiles 10% to 90%')
+```
+In order to understand how often people are actually playing the games in their library, examing the amount of achievements is very useful for this particular job. Achievements tell us whether or not the person actually played the game, as the only way to acquire an achievement is by playing the game. It appears to be that most people play a game enough to have 10 achievements. However, a tricky part about this statistic is that some games may or may not offer 10 obtainable achievements.
+
+```{r}
+steamLib3 <- steamLib3$achievements
+hist(steamLib3, main = 'Achievements entire set')
+```
+#### Median Playtime
+Now we will be looking at the median playtime for the dataset. First, we will look at playtime between the 10% to 90% quartiles, and then playtime over the *entire* dataset.
+```{r}
+steamLib4 <- steamLib4$median_playtime
+steamLib4 <- steamLib4[steamLib4 != 0]
+steamLib4 <- steamLib4[steamLib4 >= quantile(steamLib, 0.1, names=FALSE)]
+steamLib4 <- steamLib4[steamLib4 <= quantile(steamLib, 0.9, names=FALSE)]
+
+hist(steamLib, main = 'Median Playtime quartiles 10% to 90%')
+```
+Just by looking at this graph, we can tell that the playtime seems to drop off after the first few hours. A first impression on this data could be that the majority of people have games in their library that have little to no hours played on these games, thus making a majority of the games owned to be played only a handful of hours.
+
+```{r}
+steamLib5 <- steamLib5$median_playtime
+hist(steamLib5, main = 'Median Playtime entire set')
+```
+Next, we look at the entire playtime, including zeroes, and we can see that the amount of games with little to no hours played is tremendous.
+
+### Conclusion
+In conclusion, there seems to be some cleaning that needs to be done to this dataset in order to actually use the data properly. There are many games sitting in peoples library that are free to  play and have zero hours on them. What we intend to do with the data is make a model that can predict a positive or negative rating based around the attributes of a game(genre, price, playtime, etc).
